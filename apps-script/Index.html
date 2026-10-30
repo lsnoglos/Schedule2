@@ -78,6 +78,7 @@ ul.clean{padding-left:21px}.tools{display:flex;gap:10px;flex-wrap:wrap}
 </section>
 <section data-section="recursos" class="hidden">
 <div class="split"><div class="panel"><h2>Espacios</h2><div id="roomTable" class="tabwrap"></div></div><div class="panel"><h2>Turnos y restricciones</h2><div id="shiftTable" class="tabwrap"></div></div></div>
+<div class="panel"><h3>Diagnóstico de integridad</h3><p class="help">Revisa identificadores, referencias, combinaciones y conflictos de las asignaciones ya guardadas.</p><button id="diagnose" class="btn secondary">Analizar período</button><div id="diagnosis" class="note">No ejecutado.</div></div>
 <div class="panel"><h3>Gobierno de datos</h3><p>Las tablas maestras se administran directamente en Google Sheets por el administrador. Los coordinadores trabajan únicamente en esta aplicación. Las hojas por carrera se generan automáticamente.</p>
 <p class="help">No comparta permisos de edición de los libros maestros y de períodos con los coordinadores. Los permisos de aplicación no protegen contra ediciones directas en Sheets.</p></div>
 </section>
@@ -227,7 +228,8 @@ $('carrera').addEventListener('change',function(){state.carId=this.value;state.e
 $('turnoVista').addEventListener('change',renderCalendar);
 $('oferta').addEventListener('change',function(){state.editing=null;updateOfferDetails();});
 $('dia').addEventListener('change',updateBlocks);
-$('reload').addEventListener('click',function(){if(!state.periodId){call('apiInicio',[],initialize);return;}call('apiPeriodo',[state.periodId],function(d){state.base=d;render();notify('Datos actualizados.');});});
+$('reload').addEventListener('click',function(){if(!state.periodId){$('diagnose').addEventListener('click',function(){call('apiDiagnostico',[state.periodId],function(r){$('diagnosis').textContent=r.total?r.total+' incidencia(s):\n'+r.problemas.map(function(x){return x.tipo+' ['+x.id+']: '+x.detalle;}).join('\n'):'No se detectaron incidencias de integridad en los datos actuales.';notify('Diagnóstico terminado: '+r.total+' incidencia(s).',r.total>0);});});
+call('apiInicio',[],initialize);return;}call('apiPeriodo',[state.periodId],function(d){state.base=d;render();notify('Datos actualizados.');});});
 $('preview').addEventListener('click',function(){call('apiGenerar',[state.periodId,state.carId,true],function(r){$('simulation').textContent='Simulación: '+r.agregadas+' sesiones nuevas; '+r.omitidas+' existentes conservadas.\n'+(r.advertencias.length?r.advertencias.join('\n'):'Sin conflictos detectados en las propuestas.');});});
 $('generate').addEventListener('click',function(){if(!confirm('Se agregarán solo las sesiones pendientes, sin reemplazar las existentes. ¿Continuar?'))return;call('apiGenerar',[state.periodId,state.carId,false],function(r){replaceAssignments(r.asignaciones);$('simulation').textContent='Guardadas '+r.agregadas+' nuevas; '+r.omitidas+' preservadas.\n'+r.advertencias.join('\n');notify('Generación completada. '+r.agregadas+' sesiones agregadas.');});});
 $('save').addEventListener('click',function(){var p;try{p=payload();}catch(e){notify(e.message,true);return;}call('apiGuardar',[state.periodId,p],function(r){replaceAssignments(r.asignaciones);notify('Asignación guardada y publicada en las hojas por carrera.');go('horarios');});});
