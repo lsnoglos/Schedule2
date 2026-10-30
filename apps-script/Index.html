@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es"><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schedule2 · UCC</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#16253f;background:#f3f6fb}*{box-sizing:border-box}
+body{margin:0}button,input,select{font:inherit}button{cursor:pointer}
+header{background:#101f3a;color:#fff;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header strong{font-size:19px}header small{display:block;color:#afc7e6;margin-top:2px}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:calc(100vh - 67px)}
+aside{background:#152a4b;padding:18px 12px;color:#d7e9fd}
+.nav{display:block;width:100%;color:#d7e9fd;background:transparent;text-align:left;border:0;padding:13px;border-radius:10px;margin:4px 0}
+.nav.active,.nav:hover{background:#284a7e;color:#fff}
+main{padding:22px;max-width:1600px;width:100%;margin:auto}.hidden{display:none!important}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.grow{flex:1}
+.panel{border:1px solid #dee5ef;background:#fff;border-radius:15px;padding:20px;margin-bottom:17px;box-shadow:0 2px 8px #142c4f08}
+h2{margin:0 0 12px;font-size:21px}h3{margin:0 0 11px;font-size:17px}
+.muted,.help{color:#5b6d85;font-size:13px}label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:650;min-width:140px}
+input,select{background:#fff;border:1px solid #bccadc;border-radius:9px;padding:10px;min-height:40px;color:#14263f;max-width:100%}
+input:focus,select:focus{outline:2px solid #94baff}
+.btn{border:0;border-radius:9px;padding:11px 16px;background:#1764c6;color:white;font-weight:700}
+.btn.secondary{background:#ecf3ff;color:#144da0}.btn.danger{background:#fff0f0;color:#ad2938}.btn:disabled{background:#dfe5ed;color:#8090a5;cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px;margin-bottom:16px}.stat{background:white;border-radius:12px;padding:16px;border:1px solid #e1e7f0}
+.stat b{display:block;font-size:27px;margin-top:7px;color:#1453a3}
+.note{background:#f4f8ff;border-left:3px solid #4084d6;padding:12px;border-radius:7px;font-size:13px;margin:10px 0}
+.warning{background:#fff6e8;border-left-color:#e6a33a}.error{background:#fff1f0;border-left-color:#e25e58}
+.tabwrap{overflow:auto;max-width:100%}table{border-collapse:collapse;width:100%;font-size:13px;min-width:760px}
+th,td{border:1px solid #dfe5ed;padding:9px;vertical-align:top;text-align:left}th{background:#eaf2fe;color:#264567}
+td:first-child{background:#f9fbff;font-weight:700}td.slot{min-width:160px;width:15%}
+.entry{padding:9px;border-radius:8px;background:#e9f2ff;border-left:3px solid #2476d2;margin:3px 0;font-weight:400}
+.entry strong{display:block;font-size:13px}.entry small{display:block;color:#526b8d;margin-top:4px}
+.pill{display:inline-block;border:1px solid #bdd8f9;color:#195391;padding:2px 6px;border-radius:18px;font-size:11px}
+.msg{border-radius:9px;padding:13px;margin:0 0 15px;background:#e9f4ec;color:#176e39;white-space:pre-wrap}
+.msg.bad{background:#fff0ef;color:#9e2835}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+ul.clean{padding-left:21px}.tools{display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:970px){.shell{grid-template-columns:1fr}aside{display:flex;overflow-x:auto;padding:6px}.nav{width:auto;flex:0 0 auto}.cards{grid-template-columns:repeat(2,1fr)}.split{grid-template-columns:1fr}main{padding:13px}}
+@media(max-width:480px){header{padding:12px}header strong{font-size:15px}.cards{grid-template-columns:1fr 1fr}.panel{padding:12px}}
+</style></head>
+<body>
+<header><div><strong>▣ Schedule2 · Gestor académico</strong><small>Universidad de Ciencias Comerciales · Planificación institucional</small></div><div id="identity" class="muted" style="color:#d0e0fb">Verificando acceso…</div></header>
+<div class="shell"><aside>
+<button class="nav active" data-page="horarios">▦ Horarios</button>
+<button class="nav" data-page="asignar">✎ Asignación manual</button>
+<button class="nav" data-page="ofertas">▤ Oferta académica</button>
+<button class="nav" data-page="recursos">⚙ Recursos y reglas</button>
+</aside><main>
+<div id="notice" class="hidden msg"></div>
+<div class="panel"><div class="row">
+<label>Período académico<select id="periodo"></select></label>
+<label class="grow">Carrera<select id="carrera"></select></label>
+<div id="permission" class="help"></div>
+<button class="btn secondary" id="reload">Actualizar</button>
+</div></div>
+<div id="adminPeriod" class="panel hidden"><h3>Administración institucional</h3><div class="row"><label>Identificador del período<input id="periodNewId" placeholder="2026_IIICuatrimestre"></label><label>Nombre<input id="periodNewName" placeholder="III Cuatrimestre 2026"></label><label>Inicio<input id="periodStart" type="date"></label><label>Fin<input id="periodEnd" type="date"></label><button class="btn" id="newPeriod">Crear período</button><a id="masterLink" target="_blank" rel="noopener" class="btn secondary" style="text-decoration:none">Abrir libro maestro</a></div><p class="help">El sistema crea un libro Google Sheets del período y conserva allí las asignaciones. La configuración general permanece en el libro maestro.</p></div>
+<div id="empty" class="panel hidden"></div>
+<section id="content" class="hidden">
+<div class="cards"><div class="stat">Sesiones de la carrera<b id="kSesiones">0</b></div><div class="stat">Grupos<b id="kGrupos">0</b></div><div class="stat">Aulas disponibles<b id="kAulas">0</b></div><div class="stat">Sesiones compartidas<b id="kCombinadas">0</b></div></div>
+<section data-section="horarios">
+<div class="panel"><div class="row"><div class="grow"><h2>Horario semanal</h2><div class="help">Las clases compartidas aparecen simultáneamente en todas las carreras participantes.</div></div><label>Turno<select id="turnoVista"></select></label></div>
+<div id="calendar" class="tabwrap" style="margin-top:15px"></div></div>
+<div class="panel"><div class="row"><div class="grow"><h3>Generación automática no destructiva</h3><div class="help">Solo completa sesiones pendientes. Respeta asignaciones de otras coordinaciones.</div></div>
+<div class="tools"><button class="btn secondary" id="preview">Simular</button><button class="btn" id="generate">Guardar propuestas</button></div></div>
+<div id="simulation" class="note">Seleccione una carrera y ejecute una simulación antes de guardar.</div></div>
+<div class="panel"><h3>Asignaciones registradas</h3><div id="assignmentList" class="tabwrap"></div></div>
+</section>
+<section data-section="asignar" class="hidden">
+<div class="panel"><h2 id="formTitle">Asignar sesión</h2><div class="note">Una asignatura combinada requiere una combinación aprobada en la hoja Combinaciones. Se utiliza una sola aula y un solo docente para todos los grupos participantes.</div>
+<div class="row">
+<label class="grow">Oferta académica<select id="oferta"></select></label>
+<label>Día<select id="dia"></select></label>
+<label>Bloque inicial<select id="bloqueInicio"></select></label>
+</div>
+<div class="row" style="margin-top:13px"><label class="grow">Docente<select id="docente"></select></label><label class="grow">Aula / laboratorio / taller<select id="aula"></select></label></div>
+<div id="formInfo" class="note"></div><div class="tools"><button id="save" class="btn">Guardar asignación</button><button id="cancelEdit" class="btn secondary">Cancelar edición</button></div>
+</div></section>
+<section data-section="ofertas" class="hidden">
+<div class="panel"><h2>Asignaturas y grupos</h2><p class="help">Cada oferta establece carrera, grupo, nivel, turno, docente, sesiones por semana, bloques consecutivos y tipo de espacio.</p><div id="offerTable" class="tabwrap"></div></div>
+<div class="panel"><h3>Combinaciones académicas autorizadas</h3><div id="combos" class="tabwrap"></div></div>
+</section>
+<section data-section="recursos" class="hidden">
+<div class="split"><div class="panel"><h2>Espacios</h2><div id="roomTable" class="tabwrap"></div></div><div class="panel"><h2>Turnos y restricciones</h2><div id="shiftTable" class="tabwrap"></div></div></div>
+<div class="panel"><h3>Diagnóstico de integridad</h3><p class="help">Revisa identificadores, referencias, combinaciones y conflictos de las asignaciones ya guardadas.</p><button id="diagnose" class="btn secondary">Analizar período</button><div id="diagnosis" class="note">No ejecutado.</div></div>
+<div class="panel"><h3>Gobierno de datos</h3><p>Las tablas maestras se administran directamente en Google Sheets por el administrador. Los coordinadores trabajan únicamente en esta aplicación. Las hojas por carrera se generan automáticamente.</p>
+<p class="help">No comparta permisos de edición de los libros maestros y de períodos con los coordinadores. Los permisos de aplicación no protegen contra ediciones directas en Sheets.</p></div>
+</section>
+</section>
+</main></div>
+<script>
+(function(){
+'use strict';
+var state={base:null,periodos:[],user:null,carId:'',periodId:'',editing:null,page:'horarios'};
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s===undefined||s===null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var arr=function(s){return String(s||'').split('|').filter(Boolean);};
+var yes=function(s){return String(s).toUpperCase()==='SI';};
+var find=function(a,key,id){return (a||[]).find(function(x){return x[key]===id;});};
+var nameOf=function(a,key,id){var x=find(a,key,id);return x?(x.nombre||id):id;};
+var editable=function(ids){var u=state.user;return u&&(u.rol==='ADMIN'||(u.rol==='COORDINADOR'&&ids.every(function(id){return u.carreras.indexOf(id)>=0;})));};
+function notify(message,bad){var n=$('notice');n.className='msg'+(bad?' bad':'');n.textContent=message;n.scrollIntoView({block:'nearest'});}
+function busy(flag){document.querySelectorAll('button.btn').forEach(function(b){b.disabled=flag;});}
+function call(fn,args,done){busy(true);var runner=google.script.run.withSuccessHandler(function(r){busy(false);done(r);}).withFailureHandler(function(e){busy(false);notify(e.message||String(e),true);});runner[fn].apply(runner,args);}
+function opts(el,items,make){var value=el.value;el.innerHTML=items.map(function(x){var p=make(x);return '<option value="'+esc(p.id)+'">'+esc(p.label)+'</option>';}).join('');if(items.some(function(x){return make(x).id===value;}))el.value=value;}
+function activeCareer(){return find(state.base.Carreras,'carrera_id',state.carId);}
+function cOffers(){return state.base.Ofertas.filter(function(o){return o.carrera_id===state.carId&&o.periodo_id===state.periodId&&yes(o.activa);});}
+function ownAssignments(){return state.base.Asignaciones.filter(function(a){return arr(a.carrera_ids).includes(state.carId);});}
+function go(page){state.page=page;document.querySelectorAll('.nav').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});document.querySelectorAll('[data-section]').forEach(function(s){s.classList.toggle('hidden',s.dataset.section!==page);});if(state.base)render();}
+function initialize(res){
+state.user=res.usuario;state.periodos=res.periodos;state.base=res.datos;
+$('adminPeriod').classList.toggle('hidden',res.usuario.rol!=='ADMIN');if(res.adminUrl)$('masterLink').href=res.adminUrl;
+$('identity').textContent=(res.usuario.nombre||res.usuario.correo)+' · '+res.usuario.rol;
+opts($('periodo'),res.periodos,function(p){return {id:p.periodo_id,label:p.nombre+' · '+p.estado};});
+if(res.datos){state.periodId=res.datos.periodo.periodo_id;$('periodo').value=state.periodId;}
+render();
+}
+function render(){
+var d=state.base;
+$('empty').classList.toggle('hidden',!!d);$('content').classList.toggle('hidden',!d);
+if(!d){$('empty').textContent='Sin período académico. Un administrador debe ejecutar crearPeriodo() y configurar los catálogos en el libro maestro.';return;}
+var carreras=d.Carreras.filter(function(c){return yes(c.activa);});
+opts($('carrera'),carreras,function(c){return {id:c.carrera_id,label:c.nombre+' · '+(editable([c.carrera_id])?'Editable':'Solo lectura')};});
+if(state.carId&&carreras.some(function(c){return c.carrera_id===state.carId;}))$('carrera').value=state.carId;
+else {var own=carreras.find(function(c){return editable([c.carrera_id]);});$('carrera').value=(own||carreras[0]||{}).carrera_id||'';}
+state.carId=$('carrera').value;
+$('permission').textContent=editable([state.carId])?'Puede editar esta carrera':'Solo lectura';
+var carGroups=d.Grupos.filter(function(g){return g.carrera_id===state.carId&&yes(g.activo);});
+var assignments=ownAssignments();
+$('kSesiones').textContent=assignments.length;
+$('kGrupos').textContent=carGroups.length;
+$('kAulas').textContent=d.Aulas.filter(function(a){return yes(a.activa);}).length;
+$('kCombinadas').textContent=assignments.filter(function(a){return !!a.combinacion_id;}).length;
+var turns=Array.from(new Set(carGroups.map(function(g){return g.turno_id;})));
+if(!turns.length)turns=d.Turnos.filter(function(t){return yes(t.activo);}).map(function(t){return t.turno_id;});
+opts($('turnoVista'),turns,function(id){return {id:id,label:nameOf(d.Turnos,'turno_id',id)};});
+renderCalendar();renderList();renderOffers();renderResources();renderForm();
+$('preview').disabled=!editable([state.carId])||d.periodo.estado!=='ABIERTO';
+$('generate').disabled=$('preview').disabled;
+}
+function renderCalendar(){
+var d=state.base,turno=$('turnoVista').value;
+var slots=d.Bloques.filter(function(b){return b.turno_id===turno&&yes(b.activo);});
+var dias=Array.from(new Set(slots.map(function(b){return b.dia;})));
+var max=Math.max(0,...dias.map(function(day){return slots.filter(function(x){return x.dia===day;}).length;}));
+var html='<table><thead><tr><th>Bloque</th>'+dias.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr></thead><tbody>';
+for(var i=0;i<max;i++){
+html+='<tr><td class="slot">'+(i+1)+'</td>';
+dias.forEach(function(dia){
+var b=slots.filter(function(x){return x.dia===dia;}).sort(function(a,b){return Number(a.orden)-Number(b.orden);})[i];
+if(!b){html+='<td>—</td>';return;}
+var entries=ownAssignments().filter(function(a){return a.dia===dia&&a.turno_id===turno&&arr(a.bloque_ids).indexOf(b.bloque_id)>=0;});
+html+='<td><small class="help">'+esc(b.inicio+'–'+b.fin)+'</small>';
+entries.forEach(function(a){
+var start=arr(a.bloque_ids)[0]===b.bloque_id;
+html+='<div class="entry">'+(start?'<strong>'+esc(nameOf(d.Asignaturas,'asignatura_id',a.asignatura_id))+'</strong><small>'+esc(nameOf(d.Docentes,'docente_id',a.docente_id))+'</small><small>'+esc(nameOf(d.Aulas,'aula_id',a.aula_id))+'</small>':'<small>↳ Continúa la clase</small>')+(a.combinacion_id?'<span class="pill">Compartida</span>':'')+'</div>';
+});
+html+='</td>';
+});html+='</tr>';
+}html+='</tbody></table>';
+$('calendar').innerHTML=dias.length?html:'<div class="note warning">No hay bloques definidos para este turno.</div>';
+}
+function renderList(){
+var d=state.base,rows=ownAssignments().slice().sort(function(a,b){return a.dia.localeCompare(b.dia)||a.inicio.localeCompare(b.inicio);});
+$('assignmentList').innerHTML='<table><thead><tr><th>Día</th><th>Hora</th><th>Asignatura</th><th>Docente</th><th>Aula</th><th>Acciones</th></tr></thead><tbody>'+rows.map(function(a){
+var ok=editable(arr(a.carrera_ids))&&d.periodo.estado==='ABIERTO';
+return '<tr><td>'+esc(a.dia)+'</td><td>'+esc(a.inicio+'–'+a.fin)+'</td><td>'+esc(nameOf(d.Asignaturas,'asignatura_id',a.asignatura_id))+(a.combinacion_id?' <span class="pill">Compartida</span>':'')+'</td><td>'+esc(nameOf(d.Docentes,'docente_id',a.docente_id))+'</td><td>'+esc(nameOf(d.Aulas,'aula_id',a.aula_id))+'</td><td>'+(ok?'<button class="btn secondary action-edit" data-id="'+esc(a.asignacion_id)+'">Editar</button> <button class="btn danger action-delete" data-id="'+esc(a.asignacion_id)+'">Eliminar</button>':'Solo lectura')+'</td></tr>';
+}).join('')+'</tbody></table>';
+}
+function unitOfferIds(o){if(!o)return[];var c=o.combinacion_id&&find(state.base.Combinaciones,'combinacion_id',o.combinacion_id);return c&&yes(c.activa)?arr(c.oferta_ids):[o.oferta_id];}
+function unitForSelected(){var id=$('oferta').value,o=find(state.base.Ofertas,'oferta_id',id);return unitOfferIds(o).map(function(x){return find(state.base.Ofertas,'oferta_id',x);}).filter(Boolean);}
+function renderForm(){
+var d=state.base,offers=cOffers();
+opts($('oferta'),offers,function(o){return {id:o.oferta_id,label:nameOf(d.Asignaturas,'asignatura_id',o.asignatura_id)+' · '+nameOf(d.Grupos,'grupo_id',o.grupo_id)+(o.combinacion_id?' · Combinada':'')};});
+if(state.editing){var old=find(d.Asignaciones,'asignacion_id',state.editing);if(old){$('oferta').value=arr(old.oferta_ids)[0];}else state.editing=null;}
+updateOfferDetails();
+$('formTitle').textContent=state.editing?'Editar sesión':'Asignar sesión';
+$('save').disabled=!editable([state.carId])||d.periodo.estado!=='ABIERTO'||!offers.length;
+}
+function updateOfferDetails(){
+var d=state.base,unit=unitForSelected();
+var first=unit[0],groupIds=unit.map(function(o){return o.grupo_id;});
+var careers=Array.from(new Set(unit.map(function(o){return o.carrera_id;})));
+var people=unit.reduce(function(t,o){var g=find(d.Grupos,'grupo_id',o.grupo_id);return t+Number(o.matricula||g&&g.matricula||0);},0);
+var type=first?String(first.tipo_espacio||'AULA').toUpperCase():'';
+$('formInfo').textContent=first?'Grupos: '+groupIds.map(function(id){return nameOf(d.Grupos,'grupo_id',id);}).join(', ')+' · Estudiantes: '+people+' · Tipo: '+type+' · Bloques consecutivos: '+first.bloques_sesion+' · Carreras: '+careers.map(function(id){return nameOf(d.Carreras,'carrera_id',id);}).join(', '):'No hay ofertas para esta carrera.';
+$('save').disabled=!first||!editable(careers)||d.periodo.estado!=='ABIERTO';
+var turn=first?first.turno_id:'';
+var dias=Array.from(new Set(d.Bloques.filter(function(b){return b.turno_id===turn&&yes(b.activo);}).map(function(x){return x.dia;})));
+opts($('dia'),dias,function(x){return {id:x,label:x};});
+updateBlocks();
+var area=first?find(d.Asignaturas,'asignatura_id',first.asignatura_id):null;
+var required=Array.from(new Set(unit.map(function(o){return o.docente_id;}).filter(Boolean)));
+var teachers=d.Docentes.filter(function(t){return yes(t.activo)&&(!required.length||required.includes(t.docente_id))&&d.DocenteAreas.some(function(x){return area&&x.docente_id===t.docente_id&&x.area_id===area.area_id;});});
+opts($('docente'),teachers,function(x){return {id:x.docente_id,label:x.nombre};});
+var rooms=d.Aulas.filter(function(r){return yes(r.activa)&&String(r.tipo).toUpperCase()===type&&Number(r.capacidad)>=people;});
+opts($('aula'),rooms,function(r){return {id:r.aula_id,label:r.nombre+' · '+r.capacidad+' plazas · '+r.ubicacion};});
+if(!rooms.length&&first)$('formInfo').textContent+=' · SIN AULA COMPATIBLE. Registre un espacio de mayor capacidad o divida el grupo.';
+if(state.editing){
+var old=find(d.Asignaciones,'asignacion_id',state.editing);
+if(old){$('dia').value=old.dia;updateBlocks();$('bloqueInicio').value=arr(old.bloque_ids)[0];$('docente').value=old.docente_id;$('aula').value=old.aula_id;}
+}
+}
+function updateBlocks(){
+var first=unitForSelected()[0],d=state.base,day=$('dia').value;
+var slots=d.Bloques.filter(function(b){return first&&b.turno_id===first.turno_id&&b.dia===day&&yes(b.activo);}).sort(function(a,b){return Number(a.orden)-Number(b.orden);});
+var n=first?Number(first.bloques_sesion):1;
+var starts=slots.filter(function(x,i){return i+n<=slots.length;});
+opts($('bloqueInicio'),starts,function(b){return {id:b.bloque_id,label:b.inicio+'–'+slots[slots.indexOf(b)+n-1].fin};});
+}
+function payload(){
+var o=unitForSelected(),first=o[0];if(!first)throw Error('Seleccione una oferta.');
+var slots=state.base.Bloques.filter(function(b){return b.turno_id===first.turno_id&&b.dia===$('dia').value&&yes(b.activo);}).sort(function(a,b){return Number(a.orden)-Number(b.orden);});
+var start=slots.findIndex(function(b){return b.bloque_id===$('bloqueInicio').value;});
+if(start<0)throw Error('Seleccione bloque inicial.');
+var old=state.editing&&find(state.base.Asignaciones,'asignacion_id',state.editing);
+return {ofertaIds:o.map(function(x){return x.oferta_id;}),dia:$('dia').value,bloqueIds:slots.slice(start,start+Number(first.bloques_sesion)).map(function(b){return b.bloque_id;}),docenteId:$('docente').value,aulaId:$('aula').value,asignacionId:old?old.asignacion_id:'',version:old?old.version:''};
+}
+function renderOffers(){
+var d=state.base;
+$('offerTable').innerHTML='<table><thead><tr><th>Oferta</th><th>Asignatura</th><th>Grupo / nivel</th><th>Turno</th><th>Sesiones</th><th>Bloques</th><th>Espacio</th><th>Matrícula</th></tr></thead><tbody>'+cOffers().map(function(o){var g=find(d.Grupos,'grupo_id',o.grupo_id);return '<tr><td>'+esc(o.oferta_id)+'</td><td>'+esc(nameOf(d.Asignaturas,'asignatura_id',o.asignatura_id))+(o.combinacion_id?' <span class="pill">Combinada</span>':'')+'</td><td>'+esc(g?g.nombre+' / '+g.nivel:'—')+'</td><td>'+esc(o.turno_id)+'</td><td>'+esc(o.sesiones_semana)+'</td><td>'+esc(o.bloques_sesion)+'</td><td>'+esc(o.tipo_espacio)+'</td><td>'+esc(o.matricula||g&&g.matricula)+'</td></tr>';}).join('')+'</tbody></table>';
+$('combos').innerHTML='<table><thead><tr><th>Combinación</th><th>Ofertas vinculadas</th><th>Estado</th></tr></thead><tbody>'+d.Combinaciones.filter(function(x){return x.periodo_id===state.periodId&&arr(x.oferta_ids).some(function(id){return cOffers().some(function(o){return o.oferta_id===id;});});}).map(function(c){return '<tr><td>'+esc(c.combinacion_id)+'</td><td>'+esc(c.oferta_ids)+'</td><td>'+esc(c.activa)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+function renderResources(){
+var d=state.base;
+$('roomTable').innerHTML='<table><tr><th>Aula</th><th>Tipo</th><th>Cupo</th><th>Ubicación</th></tr>'+d.Aulas.map(function(r){return '<tr><td>'+esc(r.nombre)+'</td><td>'+esc(r.tipo)+'</td><td>'+esc(r.capacidad)+'</td><td>'+esc(r.ubicacion)+'</td></tr>';}).join('')+'</table>';
+$('shiftTable').innerHTML='<table><tr><th>Turno</th><th>Entrada</th><th>Salida</th><th>Receso</th><th>Almuerzo</th></tr>'+d.Turnos.map(function(r){return '<tr><td>'+esc(r.nombre)+'</td><td>'+esc(r.entrada)+'</td><td>'+esc(r.salida)+'</td><td>'+esc(r.receso_inicio+'–'+r.receso_fin)+'</td><td>'+esc(r.almuerzo_inicio+'–'+r.almuerzo_fin)+'</td></tr>';}).join('')+'</table>';
+}
+function replaceAssignments(x){state.base.Asignaciones=x;state.editing=null;render();}
+document.querySelectorAll('.nav').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.page);});});
+$('periodo').addEventListener('change',function(){state.periodId=this.value;state.editing=null;call('apiPeriodo',[state.periodId],function(r){state.base=r;state.carId='';render();});});
+$('carrera').addEventListener('change',function(){state.carId=this.value;state.editing=null;render();});
+$('turnoVista').addEventListener('change',renderCalendar);
+$('oferta').addEventListener('change',function(){state.editing=null;updateOfferDetails();});
+$('dia').addEventListener('change',updateBlocks);
+$('reload').addEventListener('click',function(){if(!state.periodId){$('diagnose').addEventListener('click',function(){call('apiDiagnostico',[state.periodId],function(r){$('diagnosis').textContent=r.total?r.total+' incidencia(s):\n'+r.problemas.map(function(x){return x.tipo+' ['+x.id+']: '+x.detalle;}).join('\n'):'No se detectaron incidencias de integridad en los datos actuales.';notify('Diagnóstico terminado: '+r.total+' incidencia(s).',r.total>0);});});
+$('newPeriod').addEventListener('click',function(){var id=$('periodNewId').value.trim(),nm=$('periodNewName').value.trim();if(!id||!nm){notify('Introduzca identificador y nombre del período.',true);return;}call('crearPeriodo',[id,nm,$('periodStart').value,$('periodEnd').value],function(url){notify('Período creado: '+id+' · '+url);call('apiInicio',[],initialize);});});
+call('apiInicio',[],initialize);return;}call('apiPeriodo',[state.periodId],function(d){state.base=d;render();notify('Datos actualizados.');});});
+$('preview').addEventListener('click',function(){call('apiGenerar',[state.periodId,state.carId,true],function(r){$('simulation').textContent='Simulación: '+r.agregadas+' sesiones nuevas; '+r.omitidas+' existentes conservadas.\n'+(r.advertencias.length?r.advertencias.join('\n'):'Sin conflictos detectados en las propuestas.');});});
+$('generate').addEventListener('click',function(){if(!confirm('Se agregarán solo las sesiones pendientes, sin reemplazar las existentes. ¿Continuar?'))return;call('apiGenerar',[state.periodId,state.carId,false],function(r){replaceAssignments(r.asignaciones);$('simulation').textContent='Guardadas '+r.agregadas+' nuevas; '+r.omitidas+' preservadas.\n'+r.advertencias.join('\n');notify('Generación completada. '+r.agregadas+' sesiones agregadas.');});});
+$('save').addEventListener('click',function(){var p;try{p=payload();}catch(e){notify(e.message,true);return;}call('apiGuardar',[state.periodId,p],function(r){replaceAssignments(r.asignaciones);notify('Asignación guardada y publicada en las hojas por carrera.');go('horarios');});});
+$('cancelEdit').addEventListener('click',function(){state.editing=null;renderForm();});
+$('assignmentList').addEventListener('click',function(e){
+var b=e.target.closest('button[data-id]');if(!b)return;
+var a=find(state.base.Asignaciones,'asignacion_id',b.dataset.id);if(!a)return;
+if(b.classList.contains('action-delete')){if(!confirm('¿Eliminar esta asignación también de todas las carreras que la comparten?'))return;call('apiEliminar',[state.periodId,a.asignacion_id,a.version],function(r){replaceAssignments(r.asignaciones);notify('Asignación eliminada.');});}
+else {state.editing=a.asignacion_id;state.carId=arr(a.carrera_ids)[0];go('asignar');}
+});
+call('apiInicio',[],initialize);
+})();
+</script></body></html>
