@@ -36,6 +36,9 @@ function ejecutarPruebas(){
   d.Asignaciones[0].docente_id='D2';
   ok('Clases simultáneas con recursos independientes',function(){validar_(d,own,input,'');});
   d.Asignaciones=[];
+  ok('Generación automática crea sesión pendiente',function(){var r=generar_(d,own,'C1');exigir_(r.nuevas.length===1,'No generó una sesión.');});
+  ok('Regeneración conserva sesión existente sin duplicar',function(){var id=d.Asignaciones[0].asignacion_id;var r=generar_(d,own,'C1');exigir_(r.nuevas.length===0&&d.Asignaciones[0].asignacion_id===id,'Regeneración destruyó o duplicó registros.');});
+  d.Asignaciones=[];
   d.Disponibilidad=[{docente_id:'D1',dia:'Lunes',inicio:'08:00',fin:'09:00',disponible:'NO'}];
   throws('Indisponibilidad del docente',function(){validar_(d,own,input,'');});
   d.Disponibilidad=[];
