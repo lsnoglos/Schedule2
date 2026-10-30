@@ -51,6 +51,7 @@ ul.clean{padding-left:21px}.tools{display:flex;gap:10px;flex-wrap:wrap}
 <div id="permission" class="help"></div>
 <button class="btn secondary" id="reload">Actualizar</button>
 </div></div>
+<div id="adminPeriod" class="panel hidden"><h3>Administración institucional</h3><div class="row"><label>Identificador del período<input id="periodNewId" placeholder="2026_IIICuatrimestre"></label><label>Nombre<input id="periodNewName" placeholder="III Cuatrimestre 2026"></label><label>Inicio<input id="periodStart" type="date"></label><label>Fin<input id="periodEnd" type="date"></label><button class="btn" id="newPeriod">Crear período</button><a id="masterLink" target="_blank" rel="noopener" class="btn secondary" style="text-decoration:none">Abrir libro maestro</a></div><p class="help">El sistema crea un libro Google Sheets del período y conserva allí las asignaciones. La configuración general permanece en el libro maestro.</p></div>
 <div id="empty" class="panel hidden"></div>
 <section id="content" class="hidden">
 <div class="cards"><div class="stat">Sesiones de la carrera<b id="kSesiones">0</b></div><div class="stat">Grupos<b id="kGrupos">0</b></div><div class="stat">Aulas disponibles<b id="kAulas">0</b></div><div class="stat">Sesiones compartidas<b id="kCombinadas">0</b></div></div>
@@ -105,6 +106,7 @@ function ownAssignments(){return state.base.Asignaciones.filter(function(a){retu
 function go(page){state.page=page;document.querySelectorAll('.nav').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});document.querySelectorAll('[data-section]').forEach(function(s){s.classList.toggle('hidden',s.dataset.section!==page);});if(state.base)render();}
 function initialize(res){
 state.user=res.usuario;state.periodos=res.periodos;state.base=res.datos;
+$('adminPeriod').classList.toggle('hidden',res.usuario.rol!=='ADMIN');if(res.adminUrl)$('masterLink').href=res.adminUrl;
 $('identity').textContent=(res.usuario.nombre||res.usuario.correo)+' · '+res.usuario.rol;
 opts($('periodo'),res.periodos,function(p){return {id:p.periodo_id,label:p.nombre+' · '+p.estado};});
 if(res.datos){state.periodId=res.datos.periodo.periodo_id;$('periodo').value=state.periodId;}
@@ -229,6 +231,7 @@ $('turnoVista').addEventListener('change',renderCalendar);
 $('oferta').addEventListener('change',function(){state.editing=null;updateOfferDetails();});
 $('dia').addEventListener('change',updateBlocks);
 $('reload').addEventListener('click',function(){if(!state.periodId){$('diagnose').addEventListener('click',function(){call('apiDiagnostico',[state.periodId],function(r){$('diagnosis').textContent=r.total?r.total+' incidencia(s):\n'+r.problemas.map(function(x){return x.tipo+' ['+x.id+']: '+x.detalle;}).join('\n'):'No se detectaron incidencias de integridad en los datos actuales.';notify('Diagnóstico terminado: '+r.total+' incidencia(s).',r.total>0);});});
+$('newPeriod').addEventListener('click',function(){var id=$('periodNewId').value.trim(),nm=$('periodNewName').value.trim();if(!id||!nm){notify('Introduzca identificador y nombre del período.',true);return;}call('crearPeriodo',[id,nm,$('periodStart').value,$('periodEnd').value],function(url){notify('Período creado: '+id+' · '+url);call('apiInicio',[],initialize);});});
 call('apiInicio',[],initialize);return;}call('apiPeriodo',[state.periodId],function(d){state.base=d;render();notify('Datos actualizados.');});});
 $('preview').addEventListener('click',function(){call('apiGenerar',[state.periodId,state.carId,true],function(r){$('simulation').textContent='Simulación: '+r.agregadas+' sesiones nuevas; '+r.omitidas+' existentes conservadas.\n'+(r.advertencias.length?r.advertencias.join('\n'):'Sin conflictos detectados en las propuestas.');});});
 $('generate').addEventListener('click',function(){if(!confirm('Se agregarán solo las sesiones pendientes, sin reemplazar las existentes. ¿Continuar?'))return;call('apiGenerar',[state.periodId,state.carId,false],function(r){replaceAssignments(r.asignaciones);$('simulation').textContent='Guardadas '+r.agregadas+' nuevas; '+r.omitidas+' preservadas.\n'+r.advertencias.join('\n');notify('Generación completada. '+r.agregadas+' sesiones agregadas.');});});
