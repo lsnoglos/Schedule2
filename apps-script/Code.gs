@@ -65,6 +65,7 @@ function crearPeriodo(periodoId,nombre,inicio,fin) {
   if (u.rol!=='ADMIN') throw new Error('Solo ADMIN puede crear períodos.');
   periodoId=String(periodoId||'').trim();
   if (!/^[0-9]{4}_[A-Za-z0-9_]+$/.test(periodoId)) throw new Error('Usar identificador como 2026_IIICuatrimestre');
+  if ((inicio&&!/^\d{4}-\d{2}-\d{2}$/.test(inicio))||(fin&&!/^\d{4}-\d{2}-\d{2}$/.test(fin))||(inicio&&fin&&inicio>fin)) throw new Error('Fechas inválidas; use AAAA-MM-DD.');
   var lock=LockService.getScriptLock();lock.waitLock(30000);
   try {
     var master=maestro_();
@@ -151,7 +152,7 @@ function apiInicio(){
   var u=usuario_(),m=maestro_(),ps=leerTabla_(m,'Periodos');
   var abiertos=ps.filter(function(p){return p.estado==='ABIERTO';});
   var selected=(abiertos[0]||ps[0]);
-  return {usuario:{correo:u.correo,nombre:u.nombre,rol:u.rol,carreras:u.carreras},periodos:ps,datos:selected?resumen_(u,datos_(m,selected.periodo_id)):null};
+  return {usuario:{correo:u.correo,nombre:u.nombre,rol:u.rol,carreras:u.carreras},periodos:ps,adminUrl:u.rol==='ADMIN'?m.getUrl():'',datos:selected?resumen_(u,datos_(m,selected.periodo_id)):null};
 }
 function apiPeriodo(id) {
   var u=usuario_(),m=maestro_();return resumen_(u,datos_(m,String(id)));
